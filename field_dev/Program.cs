@@ -33,22 +33,17 @@ namespace field_dev
 
             public void Tick(S7Client c)
             {
-                byte[] dw_buffer = new byte[4];
-                byte[] w_buffer = new byte[2];
-                c.DBRead(1, 0, 4, dw_buffer);
-                gas_v = BitConverter.ToSingle(dw_buffer, 0);
-                c.DBRead(1, 4, 4, dw_buffer);
-                pump = BitConverter.ToSingle(dw_buffer, 0);
-                c.DBRead(1, 8, 4, dw_buffer);
-                steam_v = BitConverter.ToSingle(dw_buffer, 0);
-                c.DBRead(1, 12, 4, dw_buffer);
-                water_lvl = BitConverter.ToSingle(dw_buffer, 0);
-                c.DBRead(1, 16, 4, dw_buffer);
-                pressure = BitConverter.ToSingle(dw_buffer, 0);
-                c.DBRead(1, 20, 2, w_buffer);
-                alrm = BitConverter.ToInt16(w_buffer, 0);
-                c.DBRead(1, 22, 2, w_buffer);
-                torch = BitConverter.ToBoolean(w_buffer, 1);
+                byte[] buffer = new byte[24];
+                byte[] buffer_out = new byte[10];
+
+                c.DBRead(1, 0, 24, buffer);
+                gas_v =  S7.GetRealAt(buffer, 0);
+                pump = S7.GetRealAt(buffer, 4);
+                steam_v = S7.GetRealAt(buffer, 8);
+                water_lvl = S7.GetRealAt(buffer, 12);
+                pressure = S7.GetRealAt(buffer, 16);
+                alrm = S7.GetIntAt(buffer, 20);
+                torch = S7.GetBitAt(buffer, 22, 0);
 
                 if (alrm == 0)
                 {
@@ -80,9 +75,10 @@ namespace field_dev
                         alrm = 2;
                     }
 
-                    c.DBWrite(1, 12, 4, BitConverter.GetBytes(water_lvl));
-                    c.DBWrite(1, 16, 4, BitConverter.GetBytes(pressure));
-                    c.DBWrite(1, 20, 2, BitConverter.GetBytes((short)alrm));
+                    S7.SetRealAt(buffer_out, 0, water_lvl);
+                    S7.SetRealAt(buffer_out, 4, pressure);
+                    S7.SetIntAt(buffer_out, 8, (short)alrm);
+                    c.DBWrite(1, 12, 10, buffer_out);
                 }
             }
 
@@ -167,7 +163,7 @@ namespace field_dev
                 s7_client = new S7Client();
                 try
                 {
-                    s7_client.ConnectTo("127.0.0.1", 0, 2);
+                    s7_client.ConnectTo("192.168.56.101", 0, 2);
                 }
                 catch
                 {
