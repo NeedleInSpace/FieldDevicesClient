@@ -163,7 +163,7 @@ namespace field_dev
                 s7_client = new S7Client();
                 try
                 {
-                    s7_client.ConnectTo("192.168.56.101", 0, 2);
+                    s7_client.ConnectTo("127.0.0.1", 0, 2);
                 }
                 catch
                 {
